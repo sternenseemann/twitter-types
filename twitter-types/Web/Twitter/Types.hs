@@ -121,7 +121,7 @@ instance ToJSON StreamingAPI where
     toJSON (SUnknown         v) = v
 
 -- | This type represents a Twitter tweet structure.
--- See <https://dev.twitter.com/docs/platform-objects/tweets>.
+-- See <https://developer.twitter.com/en/docs/tweets/data-dictionary/overview/intro-to-tweet-json>
 data Status = Status
     { statusContributors :: Maybe [Contributor]
     , statusCoordinates :: Maybe Coordinates
@@ -161,7 +161,7 @@ instance FromJSON Status where
                <*> o .:? "coordinates" .!= Nothing
                <*> (o .:  "created_at" >>= return . fromTwitterTime)
                <*> ((o .: "current_user_retweet" >>= (.: "id")) <|> return Nothing)
-               <*> o .:? "entities"
+               <*> ((o .: "extended_tweet" >>= (.: "entities")) <|> o .: "entities" <|> return Nothing)
                <*> o .:? "extended_entities"
                <*> o .:? "favorite_count" .!= 0
                <*> o .:? "favorited"
@@ -180,13 +180,13 @@ instance FromJSON Status where
                <*> o .:? "retweeted"
                <*> o .:? "retweeted_status"
                <*> o .:  "source"
-               <*> (o .: "full_text" <|> o .: "text")
+               <*> ((o .: "extended_tweet" >>= (.: "full_text")) <|> o .: "full_text" <|> o .: "text")
                <*> o .:  "truncated"
                <*> o .:  "user"
                <*> o .:? "withheld_copyright"
                <*> o .:? "withheld_in_countries"
                <*> o .:? "withheld_scope"
-               <*> o .:? "display_text_range"
+               <*> ((o .: "extended_tweet" >>= (.: "display_text_range")) <|> o .: "display_text_range" <|> return Nothing)
     parseJSON v = fail $ "couldn't parse status from: " ++ show v
 
 instance ToJSON Status where
